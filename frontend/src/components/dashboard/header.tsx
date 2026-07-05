@@ -7,9 +7,10 @@ import { NamespaceSwitcher } from "./namespace-switcher";
 interface HeaderProps {
   title: string;
   description?: string;
+  action?: React.ReactNode;
 }
 
-export function Header({ title, description }: HeaderProps) {
+export function Header({ title, description, action }: HeaderProps) {
   return (
     <header className="flex items-center justify-between px-6 py-4 border-b border-white/[0.06]">
       <div className="flex items-center gap-3">
@@ -22,7 +23,10 @@ export function Header({ title, description }: HeaderProps) {
           )}
         </div>
       </div>
-      <NamespaceSwitcher />
+      <div className="flex items-center gap-4">
+        {action}
+        <NamespaceSwitcher />
+      </div>
     </header>
   );
 }

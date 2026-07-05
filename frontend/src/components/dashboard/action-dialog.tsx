@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -52,13 +53,21 @@ export function ActionDialog({ type, deployment, onClose }: ActionDialogProps) {
   const mutation = type === "restart" ? restartMutation : rollbackMutation;
   const cfg = config[type];
 
+  const [error, setError] = useState<string | null>(null);
+
   const handleAction = async () => {
     if (!deployment) return;
-    await mutation.mutateAsync({
-      name: deployment.name,
-      namespace: deployment.namespace,
-    });
-    onClose();
+    setError(null);
+    try {
+      await mutation.mutateAsync({
+        name: deployment.name,
+        namespace: deployment.namespace,
+      });
+      onClose();
+    } catch (e: any) {
+      const msg = e.message || "An unexpected error occurred.";
+      setError(msg);
+    }
   };
 
   if (!deployment) return null;
@@ -82,6 +91,12 @@ export function ActionDialog({ type, deployment, onClose }: ActionDialogProps) {
             explanation={cfg.explanationFn(deployment.name)}
           />
         </div>
+
+        {error && (
+          <div className="px-6 pb-2 text-sm text-red-500 font-mono">
+            Error: {error}
+          </div>
+        )}
 
         <DialogFooter>
           <Button

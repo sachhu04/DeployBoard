@@ -53,7 +53,7 @@ async def list_deployments(namespace: Optional[str] = Query(None)):
 
 
 @router.post("/{name}/scale", response_model=ActionResponse)
-async def scale_deployment(
+def scale_deployment(
     name: str,
     body: ScaleRequest,
     namespace: str = Query("default"),
@@ -88,7 +88,7 @@ async def scale_deployment(
 
 
 @router.post("/{name}/restart", response_model=ActionResponse)
-async def restart_deployment(name: str, namespace: str = Query("default")):
+def restart_deployment(name: str, namespace: str = Query("default")):
     kube = get_kube_client()
     kubectl_cmd = f"kubectl rollout restart deployment {name} -n {namespace}"
     explanation = (

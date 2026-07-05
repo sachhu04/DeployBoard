@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import threading
 
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 
@@ -50,10 +51,28 @@ async def stream_pod_logs(
 
         log_stream = kube.core_v1.read_namespaced_pod_log(**kwargs)
 
-        for line in log_stream.stream():
-            decoded = line.decode("utf-8").rstrip("\n")
-            if decoded:
-                await websocket.send_text(decoded)
+        q = asyncio.Queue()
+        loop = asyncio.get_running_loop()
+
+        def read_sync():
+            try:
+                for line in log_stream.stream():
+                    decoded = line.decode("utf-8").rstrip("\n")
+                    if decoded:
+                        loop.call_soon_threadsafe(q.put_nowait, decoded)
+            except Exception as exc:
+                logger.debug("Sync read thread ended: %s", exc)
+            finally:
+                loop.call_soon_threadsafe(q.put_nowait, None)
+
+        thread = threading.Thread(target=read_sync, daemon=True)
+        thread.start()
+
+        while True:
+            line = await q.get()
+            if line is None:
+                break
+            await websocket.send_text(line)
 
     except WebSocketDisconnect:
         logger.debug("Client disconnected from log stream for %s/%s", namespace, pod_name)

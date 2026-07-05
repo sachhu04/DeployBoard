@@ -31,11 +31,14 @@ export function LogViewer() {
     enabled: !!selectedPod,
   });
 
-  // Auto-select first pod
+  // Auto-select first pod or reset if not in list
   useEffect(() => {
-    if (pods && pods.length > 0 && !selectedPod) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setSelectedPod(pods[0].name);
+    if (pods && pods.length > 0) {
+      if (!selectedPod || !pods.find((p) => p.name === selectedPod)) {
+        setSelectedPod(pods[0].name);
+      }
+    } else if (pods && pods.length === 0) {
+      setSelectedPod("");
     }
   }, [pods, selectedPod]);
 

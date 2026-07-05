@@ -76,7 +76,7 @@ async def exec_shell(websocket: WebSocket, namespace: str, pod: str):
 
         # Loop to read from k8s and write to browser
         while resp.is_open():
-            resp.update(timeout=1)
+            resp.update(timeout=0)
             
             if resp.peek_stdout():
                 out = resp.read_stdout()

@@ -14,7 +14,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.k8s.client import get_kube_client
-from app.routers import configmaps, deployments, events, logs, namespaces, pods, secrets, services, exec, metrics
+from app.routers import configmaps, deployments, events, logs, namespaces, pods, secrets, services, exec, metrics, ci
 
 logging.basicConfig(
     level=logging.INFO,
@@ -59,6 +59,7 @@ app.include_router(configmaps.router)
 app.include_router(secrets.router)
 app.include_router(exec.router)
 app.include_router(metrics.router)
+app.include_router(ci.router)
 
 
 @app.get("/api/health")
