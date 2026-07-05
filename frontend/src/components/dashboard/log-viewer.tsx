@@ -111,7 +111,7 @@ export function LogViewer() {
           <div
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs ${
               isConnected
-                ? "text-cyan bg-cyan/10"
+                ? "text-yellow bg-yellow/10"
                 : "text-muted-foreground bg-white/[0.04]"
             }`}
           >
@@ -133,9 +133,23 @@ export function LogViewer() {
         />
       )}
 
-      {/* Log output */}
-      <ScrollArea className="h-[calc(100vh-360px)] rounded-lg border border-white/[0.06] bg-black/40">
-        <div ref={scrollRef} className="p-4 font-mono text-xs leading-relaxed">
+      {/* Log output window */}
+      <div className="flex flex-col h-[calc(100vh-360px)] w-full glass-strong rounded-xl overflow-hidden shadow-2xl ring-1 ring-white/5">
+        {/* macOS Style Header */}
+        <div className="h-10 border-b border-white/[0.08] bg-black/40 flex items-center px-4 shrink-0 backdrop-blur-md">
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 rounded-full bg-red-500/80 cursor-pointer hover:bg-red-500 transition-colors" />
+            <div className="w-3 h-3 rounded-full bg-yellow-500/80 cursor-pointer hover:bg-yellow-500 transition-colors" />
+            <div className="w-3 h-3 rounded-full bg-green-500/80 cursor-pointer hover:bg-green-500 transition-colors" />
+          </div>
+          <div className="flex-1 text-center font-mono text-[10px] text-muted-foreground font-medium uppercase tracking-wider flex items-center justify-center gap-2">
+            kubectl logs -f {selectedPod || "none"}
+          </div>
+          <div className="w-16" /> {/* Spacer for balance */}
+        </div>
+
+        <ScrollArea className="flex-1 bg-[#09090b]/90">
+          <div ref={scrollRef} className="p-4 font-mono text-xs leading-relaxed text-[#00ff00]">
           {filteredLogs.length === 0 ? (
             <div className="flex items-center justify-center py-20 text-muted-foreground text-sm">
               {selectedPod
@@ -168,7 +182,8 @@ export function LogViewer() {
             ))
           )}
         </div>
-      </ScrollArea>
+        </ScrollArea>
+      </div>
 
       {/* Auto-scroll toggle */}
       <div className="flex items-center justify-between">
@@ -180,7 +195,7 @@ export function LogViewer() {
           onClick={() => setAutoScroll(!autoScroll)}
           className={`text-xs px-3 py-1.5 rounded-md transition-colors ${
             autoScroll
-              ? "bg-cyan/10 text-cyan"
+              ? "bg-yellow/10 text-yellow"
               : "bg-white/[0.04] text-muted-foreground hover:text-foreground"
           }`}
         >

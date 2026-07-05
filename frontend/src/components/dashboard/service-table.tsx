@@ -21,7 +21,7 @@ interface ServiceTableProps {
 const typeColors: Record<string, string> = {
   ClusterIP: "bg-blue-500/10 text-blue-400 border-blue-500/20",
   NodePort: "bg-purple-500/10 text-purple-400 border-purple-500/20",
-  LoadBalancer: "bg-cyan/10 text-cyan border-cyan/20",
+  LoadBalancer: "bg-yellow/10 text-yellow border-yellow/20",
 };
 
 export function ServiceTable({ services, isLoading }: ServiceTableProps) {
@@ -36,7 +36,7 @@ export function ServiceTable({ services, isLoading }: ServiceTableProps) {
   }
 
   return (
-    <div className="rounded-lg border border-white/[0.06] overflow-hidden">
+    <div className="rounded-xl glass overflow-hidden shadow-2xl border-white/[0.08]">
       <Table>
         <TableHeader>
           <TableRow className="border-white/[0.06] hover:bg-transparent">
@@ -67,7 +67,7 @@ export function ServiceTable({ services, isLoading }: ServiceTableProps) {
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.03, duration: 0.3 }}
-              className="border-white/[0.04] hover:bg-white/[0.02] transition-colors"
+              className="border-white/[0.04] hover:bg-white/[0.04] transition-all group hover:shadow-lg"
             >
               <TableCell className="font-mono text-sm">{svc.name}</TableCell>
               <TableCell className="text-sm text-muted-foreground">

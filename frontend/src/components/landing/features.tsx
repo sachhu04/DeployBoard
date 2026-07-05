@@ -73,7 +73,7 @@ export function Features() {
           transition={{ duration: 0.6 }}
           className="text-center mb-16"
         >
-          <p className="text-sm font-medium text-cyan mb-3 tracking-wide uppercase">
+          <p className="text-sm font-medium text-yellow mb-3 tracking-wide uppercase">
             Features
           </p>
           <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-4">
@@ -98,7 +98,7 @@ export function Features() {
               variants={item}
               className="group relative rounded-xl border border-white/[0.06] bg-white/[0.02] p-6 hover:bg-white/[0.04] transition-colors duration-300"
             >
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-cyan/10 text-cyan mb-4 group-hover:bg-cyan/15 transition-colors">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-yellow/10 text-yellow mb-4 group-hover:bg-yellow/15 transition-colors">
                 <feature.icon className="h-5 w-5" />
               </div>
               <h3 className="text-base font-semibold mb-2">{feature.title}</h3>

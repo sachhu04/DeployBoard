@@ -50,7 +50,7 @@ export function AppSidebar() {
     <Sidebar className="border-r border-white/[0.06]">
       <SidebarHeader className="px-4 py-5">
         <Link href="/" className="flex items-center gap-2.5 group">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-cyan text-cyan-foreground">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-yellow text-yellow-foreground">
             <Box className="h-4.5 w-4.5" />
           </div>
           <div>
@@ -152,7 +152,7 @@ export function AppSidebar() {
             Mode
           </p>
           <div className="flex items-center gap-2">
-            <div className="h-2 w-2 rounded-full bg-cyan animate-pulse" />
+            <div className="h-2 w-2 rounded-full bg-yellow animate-pulse" />
             <span className="text-xs text-muted-foreground">Demo Mode</span>
           </div>
         </div>

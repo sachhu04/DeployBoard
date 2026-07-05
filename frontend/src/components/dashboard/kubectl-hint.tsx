@@ -18,14 +18,14 @@ export function KubectlHint({ command, explanation }: KubectlHintProps) {
   };
 
   return (
-    <div className="rounded-lg border border-cyan/20 bg-cyan/[0.04] p-4 space-y-2.5">
-      <div className="flex items-center gap-2 text-xs font-medium text-cyan">
+    <div className="rounded-lg border border-yellow/20 bg-yellow/[0.04] p-4 space-y-2.5">
+      <div className="flex items-center gap-2 text-xs font-medium text-yellow">
         <Terminal className="h-3.5 w-3.5" />
         kubectl equivalent
       </div>
       <div className="relative group">
         <div className="bg-black/40 rounded-md px-4 py-3 font-mono text-sm text-foreground/90 overflow-x-auto pr-10">
-          <span className="text-cyan/50">$ </span>
+          <span className="text-yellow/50">$ </span>
           {command}
         </div>
         <button
@@ -34,7 +34,7 @@ export function KubectlHint({ command, explanation }: KubectlHintProps) {
           aria-label="Copy kubectl command"
         >
           {copied ? (
-            <Check className="h-3.5 w-3.5 text-cyan" />
+            <Check className="h-3.5 w-3.5 text-yellow" />
           ) : (
             <Copy className="h-3.5 w-3.5" />
           )}

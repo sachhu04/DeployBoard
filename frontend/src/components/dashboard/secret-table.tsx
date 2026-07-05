@@ -55,7 +55,7 @@ export function SecretTable() {
           >
             <div className="font-mono text-sm">{secret.name}</div>
             <div className="text-sm text-muted-foreground">{secret.namespace}</div>
-            <div className="text-sm font-mono text-xs text-cyan-400 bg-cyan-400/10 px-2 py-0.5 rounded-md inline-block w-max">{secret.type}</div>
+            <div className="text-sm font-mono text-xs text-yellow-400 bg-yellow-400/10 px-2 py-0.5 rounded-md inline-block w-max">{secret.type}</div>
             <div className="text-sm">{secret.data_keys}</div>
             <div className="text-sm text-muted-foreground">{secret.age}</div>
           </motion.div>

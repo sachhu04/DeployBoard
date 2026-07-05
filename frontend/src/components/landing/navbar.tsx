@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Box } from "lucide-react";
+import { Boxes } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export function Navbar() {
@@ -13,10 +13,10 @@ export function Navbar() {
       transition={{ duration: 0.5 }}
       className="fixed top-0 left-0 right-0 z-50 glass"
     >
-      <div className="mx-auto max-w-7xl px-6 py-4 flex items-center justify-between">
+      <div className="mx-auto max-w-7xl px-6 py-2.5 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2.5 group">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-cyan text-cyan-foreground">
-            <Box className="h-4.5 w-4.5" />
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-yellow text-yellow-foreground">
+            <Boxes className="h-5 w-5" />
           </div>
           <span className="text-lg font-semibold tracking-tight">
             DeployBoard
@@ -45,13 +45,14 @@ export function Navbar() {
         </nav>
 
         <div className="flex items-center gap-3">
-          <Button render={<a href="https://github.com/sachhu04/DeployBoard" target="_blank" rel="noopener noreferrer" />} variant="ghost" size="sm">
+          <Button render={<a href="https://github.com/sachhu04/DeployBoard" target="_blank" rel="noopener noreferrer" />} variant="ghost" size="sm" nativeButton={false}>
             GitHub
           </Button>
           <Button
             render={<Link href="/dashboard" />}
             size="sm"
-            className="bg-cyan text-cyan-foreground hover:bg-cyan/90"
+            className="bg-yellow text-yellow-foreground hover:bg-yellow/90"
+            nativeButton={false}
           >
             Open Dashboard
           </Button>

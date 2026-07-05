@@ -57,7 +57,7 @@ export function DeploymentTable({
 
   return (
     <>
-      <div className="rounded-lg border border-white/[0.06] overflow-hidden">
+      <div className="rounded-xl glass overflow-hidden shadow-2xl border-white/[0.08]">
         <Table>
           <TableHeader>
             <TableRow className="border-white/[0.06] hover:bg-transparent">
@@ -91,7 +91,7 @@ export function DeploymentTable({
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.03, duration: 0.3 }}
-                className="border-white/[0.04] hover:bg-white/[0.02] transition-colors group"
+                className="border-white/[0.04] hover:bg-white/[0.04] transition-all group hover:shadow-lg"
               >
                 <TableCell className="font-mono text-sm">
                   {dep.name}
@@ -103,7 +103,7 @@ export function DeploymentTable({
                   <span
                     className={
                       dep.ready_replicas === dep.desired_replicas
-                        ? "text-cyan"
+                        ? "text-yellow"
                         : "text-yellow-400"
                     }
                   >

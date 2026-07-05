@@ -51,21 +51,21 @@ function CommandCard({
   return (
     <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-5 space-y-3">
       <div className="flex items-center justify-between">
-        <span className="text-sm font-medium text-cyan">{action}</span>
+        <span className="text-sm font-medium text-yellow">{action}</span>
         <button
           onClick={handleCopy}
           className="p-1.5 rounded-md hover:bg-white/5 text-muted-foreground hover:text-foreground transition-colors"
           aria-label={`Copy ${action} command`}
         >
           {copied ? (
-            <Check className="h-3.5 w-3.5 text-cyan" />
+            <Check className="h-3.5 w-3.5 text-yellow" />
           ) : (
             <Copy className="h-3.5 w-3.5" />
           )}
         </button>
       </div>
       <div className="bg-black/30 rounded-lg px-4 py-3 font-mono text-sm text-foreground/80 overflow-x-auto">
-        <span className="text-cyan/60">$ </span>
+        <span className="text-yellow/60">$ </span>
         {command}
       </div>
       <p className="text-xs text-muted-foreground leading-relaxed">
@@ -86,7 +86,7 @@ export function LearnKubectl() {
           transition={{ duration: 0.6 }}
           className="text-center mb-16"
         >
-          <p className="text-sm font-medium text-cyan mb-3 tracking-wide uppercase">
+          <p className="text-sm font-medium text-yellow mb-3 tracking-wide uppercase">
             Learn as you go
           </p>
           <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-4">

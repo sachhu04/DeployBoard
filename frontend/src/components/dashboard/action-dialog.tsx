@@ -112,7 +112,7 @@ export function ActionDialog({ type, deployment, onClose }: ActionDialogProps) {
             className={
               type === "rollback"
                 ? "bg-yellow-500 text-black hover:bg-yellow-500/90"
-                : "bg-cyan text-cyan-foreground hover:bg-cyan/90"
+                : "bg-yellow text-yellow-foreground hover:bg-yellow/90"
             }
           >
             {mutation.isPending ? cfg.buttonLabelPending : cfg.buttonLabel}

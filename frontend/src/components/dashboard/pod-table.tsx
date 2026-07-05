@@ -36,7 +36,7 @@ export function PodTable({ pods, isLoading }: PodTableProps) {
   }
 
   return (
-    <div className="rounded-lg border border-white/[0.06] overflow-hidden">
+    <div className="rounded-xl glass overflow-hidden shadow-2xl border-white/[0.08]">
       <Table>
         <TableHeader>
           <TableRow className="border-white/[0.06] hover:bg-transparent">
@@ -73,7 +73,7 @@ export function PodTable({ pods, isLoading }: PodTableProps) {
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.02, duration: 0.3 }}
-              className="border-white/[0.04] hover:bg-white/[0.02] transition-colors"
+              className="border-white/[0.04] hover:bg-white/[0.04] transition-all group hover:shadow-lg cursor-pointer"
             >
               <TableCell className="font-mono text-xs max-w-[260px] truncate">
                 {pod.name}
@@ -108,7 +108,7 @@ export function PodTable({ pods, isLoading }: PodTableProps) {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-8 w-8 text-muted-foreground hover:text-cyan-500 hover:bg-cyan-500/10"
+                  className="h-8 w-8 text-muted-foreground hover:text-yellow-500 hover:bg-yellow-500/10"
                   onClick={() => setSelectedPod(pod)}
                   title="Exec Shell"
                 >

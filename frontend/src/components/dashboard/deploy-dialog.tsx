@@ -47,7 +47,7 @@ export function DeployDialog() {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger render={<Button className="bg-cyan text-cyan-foreground hover:bg-cyan/90" />}>
+      <DialogTrigger render={<Button className="bg-yellow text-yellow-foreground hover:bg-yellow/90" />}>
         <RocketIcon className="mr-2 h-4 w-4" />
         Deploy New App
       </DialogTrigger>
@@ -88,7 +88,7 @@ export function DeployDialog() {
               ) : status === "failed" ? (
                 <XCircleIcon className="h-6 w-6 text-red-500" />
               ) : (
-                <RefreshCwIcon className="h-6 w-6 animate-spin text-cyan" />
+                <RefreshCwIcon className="h-6 w-6 animate-spin text-yellow" />
               )}
               <div className="flex-1 space-y-1">
                 <p className="text-sm font-medium leading-none capitalize">

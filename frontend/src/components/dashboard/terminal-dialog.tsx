@@ -32,7 +32,7 @@ export function TerminalDialog({ pod, onClose }: TerminalDialogProps) {
       theme: {
         background: "#09090b", // match bg-card
         foreground: "#fafafa",
-        cursor: "#06b6d4", // cyan-500
+        cursor: "#06b6d4", // yellow-500
         selectionBackground: "rgba(16, 185, 129, 0.3)",
         black: "#000000",
         red: "#ef4444",
@@ -40,7 +40,7 @@ export function TerminalDialog({ pod, onClose }: TerminalDialogProps) {
         yellow: "#eab308",
         blue: "#3b82f6",
         magenta: "#d946ef",
-        cyan: "#06b6d4",
+        yellow: "#06b6d4",
         white: "#fafafa",
       },
       fontFamily: "JetBrains Mono, monospace",
@@ -103,32 +103,33 @@ export function TerminalDialog({ pod, onClose }: TerminalDialogProps) {
 
   return (
     <Dialog open={!!pod} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-[800px] max-h-[85vh] flex flex-col bg-card border-white/[0.08] overflow-hidden p-0">
-        <DialogHeader className="px-6 py-4 border-b border-white/[0.08] shrink-0">
-          <DialogTitle className="flex items-center justify-between font-mono text-sm">
-            <span>root@{pod.name}</span>
-            <div className="flex items-center gap-2 text-xs font-sans font-normal">
-              <span className="text-muted-foreground">Status:</span>
+      <DialogContent className="max-w-[1000px] w-[95vw] h-[80vh] p-0 bg-transparent border-0 overflow-hidden shadow-2xl">
+        <div className="flex flex-col h-full w-full glass-strong rounded-xl overflow-hidden shadow-2xl ring-1 ring-white/5">
+          {/* macOS Style Header */}
+          <div className="h-12 border-b border-white/[0.08] bg-black/40 flex items-center px-4 shrink-0 backdrop-blur-md">
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full bg-red-500/80 cursor-pointer hover:bg-red-500 transition-colors" onClick={onClose} />
+              <div className="w-3 h-3 rounded-full bg-yellow-500/80 cursor-pointer hover:bg-yellow-500 transition-colors" />
+              <div className="w-3 h-3 rounded-full bg-green-500/80 cursor-pointer hover:bg-green-500 transition-colors" />
+            </div>
+            <div className="flex-1 text-center font-mono text-xs text-muted-foreground font-medium flex items-center justify-center gap-2">
+              root@{pod.name}
               {isConnected ? (
-                <span className="text-cyan-500 flex items-center gap-1.5">
-                  <div className="h-1.5 w-1.5 rounded-full bg-cyan-500 animate-pulse" />
-                  Connected
-                </span>
+                <div className="h-1.5 w-1.5 rounded-full bg-yellow-500 animate-pulse ml-2" title="Connected" />
               ) : (
-                <span className="text-muted-foreground flex items-center gap-1.5">
-                  <div className="h-1.5 w-1.5 rounded-full bg-muted-foreground" />
-                  Connecting...
-                </span>
+                <div className="h-1.5 w-1.5 rounded-full bg-red-500 ml-2" title="Disconnected" />
               )}
             </div>
-          </DialogTitle>
-        </DialogHeader>
-
-        <div className="flex-1 min-h-[400px] relative bg-[#09090b] p-4">
-          {!isConnected && (
-            <Skeleton className="absolute inset-4 rounded-none opacity-20" />
-          )}
-          <div ref={terminalRef} className="h-full w-full" />
+            <div className="w-16" /> {/* Spacer for balance */}
+          </div>
+          
+          {/* Terminal Body */}
+          <div className="flex-1 p-2 bg-[#09090b]/90 relative">
+            {!isConnected && (
+              <Skeleton className="absolute inset-4 rounded-none opacity-20" />
+            )}
+            <div ref={terminalRef} className="w-full h-full" />
+          </div>
         </div>
       </DialogContent>
     </Dialog>

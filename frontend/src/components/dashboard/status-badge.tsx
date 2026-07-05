@@ -5,9 +5,9 @@ interface StatusBadgeProps {
 }
 
 const statusStyles: Record<string, string> = {
-  Available: "bg-cyan/10 text-cyan border-cyan/20 hover:bg-cyan/15",
-  Running: "bg-cyan/10 text-cyan border-cyan/20 hover:bg-cyan/15",
-  Active: "bg-cyan/10 text-cyan border-cyan/20 hover:bg-cyan/15",
+  Available: "bg-yellow/10 text-yellow border-yellow/20 hover:bg-yellow/15",
+  Running: "bg-yellow/10 text-yellow border-yellow/20 hover:bg-yellow/15",
+  Active: "bg-yellow/10 text-yellow border-yellow/20 hover:bg-yellow/15",
   Progressing: "bg-yellow-500/10 text-yellow-400 border-yellow-500/20 hover:bg-yellow-500/15",
   Pending: "bg-yellow-500/10 text-yellow-400 border-yellow-500/20 hover:bg-yellow-500/15",
   CrashLoopBackOff: "bg-red-500/10 text-red-400 border-red-500/20 hover:bg-red-500/15",
@@ -15,7 +15,7 @@ const statusStyles: Record<string, string> = {
   Failed: "bg-red-500/10 text-red-400 border-red-500/20 hover:bg-red-500/15",
   Completed: "bg-blue-500/10 text-blue-400 border-blue-500/20 hover:bg-blue-500/15",
   Succeeded: "bg-blue-500/10 text-blue-400 border-blue-500/20 hover:bg-blue-500/15",
-  Normal: "bg-cyan/10 text-cyan border-cyan/20 hover:bg-cyan/15",
+  Normal: "bg-yellow/10 text-yellow border-yellow/20 hover:bg-yellow/15",
   Warning: "bg-yellow-500/10 text-yellow-400 border-yellow-500/20 hover:bg-yellow-500/15",
 };
 

@@ -108,7 +108,7 @@ export function ScaleDialog({ deployment, onClose }: ScaleDialogProps) {
           <Button
             onClick={handleScale}
             disabled={scaleMutation.isPending}
-            className="bg-cyan text-cyan-foreground hover:bg-cyan/90"
+            className="bg-yellow text-yellow-foreground hover:bg-yellow/90"
           >
             {scaleMutation.isPending ? "Scaling..." : "Scale"}
           </Button>

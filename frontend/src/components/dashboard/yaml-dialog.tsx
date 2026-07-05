@@ -89,7 +89,7 @@ export function YamlDialog({ deployment, onClose }: YamlDialogProps) {
             </Button>
             <Button
               size="sm"
-              className="bg-cyan text-cyan-foreground hover:bg-cyan/90"
+              className="bg-yellow text-yellow-foreground hover:bg-yellow/90"
               onClick={handleSave}
               disabled={!isEdited || applyYaml.isPending}
             >

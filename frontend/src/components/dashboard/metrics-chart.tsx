@@ -39,7 +39,7 @@ export function MetricsOverview() {
       >
         <div className="p-4 border-b border-white/[0.04] flex items-center justify-between shrink-0">
           <div className="flex items-center gap-2">
-            <Cpu className="h-4 w-4 text-cyan-500" />
+            <Cpu className="h-4 w-4 text-yellow-500" />
             <h3 className="text-sm font-medium">CPU Utilization</h3>
           </div>
           <span className="text-xs font-mono px-2 py-1 bg-white/[0.04] rounded-md">
