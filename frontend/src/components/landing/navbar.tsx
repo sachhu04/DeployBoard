@@ -45,7 +45,7 @@ export function Navbar() {
         </nav>
 
         <div className="flex items-center gap-3">
-          <Button render={<a href="https://github.com" target="_blank" rel="noopener noreferrer" />} variant="ghost" size="sm">
+          <Button render={<a href="https://github.com/sachhu04/DeployBoard" target="_blank" rel="noopener noreferrer" />} variant="ghost" size="sm">
             GitHub
           </Button>
           <Button
