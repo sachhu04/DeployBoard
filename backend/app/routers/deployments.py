@@ -9,8 +9,10 @@ import yaml
 from fastapi import APIRouter, HTTPException, Query
 
 from app.k8s.client import get_kube_client
-from app.k8s.mock_data import mock_deployment_yaml, mock_deployments
+from app.k8s import mock_data
 from app.models.schemas import ActionResponse, ApplyYamlRequest, DeploymentResponse, ScaleRequest
+import random
+from datetime import datetime, timezone
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/deployments", tags=["deployments"])
@@ -21,7 +23,7 @@ def list_deployments(namespace: Optional[str] = Query(None)):
     kube = get_kube_client()
 
     if kube.is_mock:
-        return mock_deployments(namespace)
+        return mock_data.mock_deployments(namespace)
 
     try:
         if namespace and namespace != "all":
@@ -71,6 +73,39 @@ def scale_deployment(
     )
 
     if kube.is_mock:
+        mock_data._init_mock_state()
+        dep = next((d for d in mock_data._MOCK_STATE["deployments"] if d["name"] == name and d["namespace"] == namespace), None)
+        if dep:
+            dep["desired_replicas"] = body.replicas
+            dep["ready_replicas"] = body.replicas
+            dep["status"] = "Available" if body.replicas > 0 else "Scaled Down"
+            
+            # Sync pods
+            pods = [p for p in mock_data._MOCK_STATE["pods"] if p["deployment"] == name and p["namespace"] == namespace]
+            current_replicas = len(pods)
+            
+            if body.replicas > current_replicas:
+                # Add pods
+                for _ in range(body.replicas - current_replicas):
+                    suffix = f"{''.join(random.choices('abcdef0123456789', k=5))}-{''.join(random.choices('abcdef0123456789', k=5))}"
+                    now_iso = datetime.now(timezone.utc).isoformat()
+                    mock_data._MOCK_STATE["pods"].append({
+                        "name": f"{name}-{suffix}",
+                        "namespace": namespace,
+                        "status": "Running",
+                        "restarts": 0,
+                        "node": random.choice(["kind-worker", "kind-worker2"]),
+                        "age": "1s",
+                        "created_at": now_iso,
+                        "ip": f"10.244.{random.randint(0, 3)}.{random.randint(2, 254)}",
+                        "deployment": name,
+                    })
+            elif body.replicas < current_replicas:
+                # Remove pods
+                pods_to_remove = current_replicas - body.replicas
+                for pod in pods[:pods_to_remove]:
+                    mock_data._MOCK_STATE["pods"].remove(pod)
+                    
         return ActionResponse(
             success=True,
             message=f"Scaled {name} to {body.replicas} replicas (mock)",
@@ -102,6 +137,16 @@ def restart_deployment(name: str, namespace: str = Query("default")):
     )
 
     if kube.is_mock:
+        mock_data._init_mock_state()
+        now_iso = datetime.now(timezone.utc).isoformat()
+        
+        # update pod ages
+        for pod in mock_data._MOCK_STATE["pods"]:
+            if pod["deployment"] == name and pod["namespace"] == namespace:
+                pod["age"] = "1s"
+                pod["created_at"] = now_iso
+                pod["restarts"] = 0
+                
         return ActionResponse(
             success=True,
             message=f"Restarted deployment {name} (mock)",
@@ -143,6 +188,13 @@ def rollback_deployment(name: str, namespace: str = Query("default")):
     )
 
     if kube.is_mock:
+        mock_data._init_mock_state()
+        now_iso = datetime.now(timezone.utc).isoformat()
+        for pod in mock_data._MOCK_STATE["pods"]:
+            if pod["deployment"] == name and pod["namespace"] == namespace:
+                pod["age"] = "1s"
+                pod["created_at"] = now_iso
+                
         return ActionResponse(
             success=True,
             message=f"Rolled back deployment {name} (mock)",
@@ -188,7 +240,7 @@ def get_deployment_yaml(name: str, namespace: str = Query("default")):
     kube = get_kube_client()
 
     if kube.is_mock:
-        return {"yaml": mock_deployment_yaml(name, namespace)}
+        return {"yaml": mock_data.mock_deployment_yaml(name, namespace)}
 
     try:
         import subprocess
@@ -219,6 +271,23 @@ def apply_deployment_yaml(
     )
 
     if kube.is_mock:
+        try:
+            dep_dict = yaml.safe_load(body.yaml_content)
+        except yaml.YAMLError as exc:
+            raise HTTPException(status_code=400, detail=f"Invalid YAML: {exc}")
+            
+        mock_data._init_mock_state()
+        dep = next((d for d in mock_data._MOCK_STATE["deployments"] if d["name"] == name and d["namespace"] == namespace), None)
+        if dep:
+            spec = dep_dict.get("spec", {})
+            if "replicas" in spec:
+                dep["desired_replicas"] = spec["replicas"]
+                dep["ready_replicas"] = spec["replicas"]
+            
+            containers = spec.get("template", {}).get("spec", {}).get("containers", [])
+            if containers and "image" in containers[0]:
+                dep["image"] = containers[0]["image"]
+                
         return ActionResponse(
             success=True,
             message=f"Applied YAML configuration for {name} (mock)",
@@ -265,6 +334,10 @@ def delete_deployment(name: str, namespace: str = Query("default")):
     explanation = f"Deletes the deployment '{name}' and all its associated pods."
 
     if kube.is_mock:
+        mock_data._init_mock_state()
+        mock_data._MOCK_STATE["deployments"] = [d for d in mock_data._MOCK_STATE["deployments"] if not (d["name"] == name and d["namespace"] == namespace)]
+        mock_data._MOCK_STATE["pods"] = [p for p in mock_data._MOCK_STATE["pods"] if not (p["deployment"] == name and p["namespace"] == namespace)]
+        
         return ActionResponse(
             success=True,
             message=f"Deleted {name} (mock)",

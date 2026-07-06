@@ -8,7 +8,9 @@ from typing import Optional
 from fastapi import APIRouter, HTTPException, Query
 
 from app.k8s.client import get_kube_client
-from app.k8s.mock_data import mock_pods
+from app.k8s import mock_data
+import random
+from datetime import datetime, timezone
 from app.models.schemas import PodResponse, ActionResponse
 
 logger = logging.getLogger(__name__)
@@ -20,7 +22,7 @@ def list_pods(namespace: Optional[str] = Query(None)):
     kube = get_kube_client()
 
     if kube.is_mock:
-        return mock_pods(namespace)
+        return mock_data.mock_pods(namespace)
 
     try:
         if namespace and namespace != "all":
@@ -70,6 +72,32 @@ def delete_pod(name: str, namespace: str = Query("default")):
     kube = get_kube_client()
 
     if kube.is_mock:
+        mock_data._init_mock_state()
+        
+        # Find the pod
+        target_pod = next((p for p in mock_data._MOCK_STATE["pods"] if p["name"] == name and p["namespace"] == namespace), None)
+        if target_pod:
+            # Remove it
+            mock_data._MOCK_STATE["pods"].remove(target_pod)
+            
+            # Recreate it (since it's managed by a deployment)
+            deployment_name = target_pod.get("deployment")
+            if deployment_name:
+                suffix = f"{''.join(random.choices('abcdef0123456789', k=5))}-{''.join(random.choices('abcdef0123456789', k=5))}"
+                now_iso = datetime.now(timezone.utc).isoformat()
+                
+                mock_data._MOCK_STATE["pods"].append({
+                    "name": f"{deployment_name}-{suffix}",
+                    "namespace": namespace,
+                    "status": "Running",
+                    "restarts": 0,
+                    "node": target_pod.get("node", "kind-worker"),
+                    "age": "1s",
+                    "created_at": now_iso,
+                    "ip": f"10.244.{random.randint(0, 3)}.{random.randint(2, 254)}",
+                    "deployment": deployment_name,
+                })
+        
         return ActionResponse(
             success=True,
             message=f"Deleted pod {name} (mock)",
