@@ -140,12 +140,24 @@ def restart_deployment(name: str, namespace: str = Query("default")):
         mock_data._init_mock_state()
         now_iso = datetime.now(timezone.utc).isoformat()
         
-        # update pod ages
-        for pod in mock_data._MOCK_STATE["pods"]:
-            if pod["deployment"] == name and pod["namespace"] == namespace:
-                pod["age"] = "1s"
-                pod["created_at"] = now_iso
-                pod["restarts"] = 0
+        # Remove old pods and create new ones with new hashes
+        old_pods = [p for p in mock_data._MOCK_STATE["pods"] if p["deployment"] == name and p["namespace"] == namespace]
+        for p in old_pods:
+            mock_data._MOCK_STATE["pods"].remove(p)
+            
+        for p in old_pods:
+            suffix = f"{''.join(random.choices('abcdef0123456789', k=5))}-{''.join(random.choices('abcdef0123456789', k=5))}"
+            mock_data._MOCK_STATE["pods"].append({
+                "name": f"{name}-{suffix}",
+                "namespace": namespace,
+                "status": "Running",
+                "restarts": 0,
+                "node": p.get("node", random.choice(["kind-worker", "kind-worker2"])),
+                "age": "1s",
+                "created_at": now_iso,
+                "ip": f"10.244.{random.randint(0, 3)}.{random.randint(2, 254)}",
+                "deployment": name,
+            })
                 
         return ActionResponse(
             success=True,
@@ -188,10 +200,38 @@ def rollback_deployment(name: str, namespace: str = Query("default")):
     if kube.is_mock:
         mock_data._init_mock_state()
         now_iso = datetime.now(timezone.utc).isoformat()
-        for pod in mock_data._MOCK_STATE["pods"]:
-            if pod["deployment"] == name and pod["namespace"] == namespace:
-                pod["age"] = "1s"
-                pod["created_at"] = now_iso
+        dep = next((d for d in mock_data._MOCK_STATE["deployments"] if d["name"] == name and d["namespace"] == namespace), None)
+        if dep:
+            # Downgrade image version if possible to simulate rollback
+            img = dep["image"]
+            if ":" in img:
+                base, tag = img.split(":", 1)
+                # Just append '-rollback' or strip it to toggle
+                if "-rollback" in tag:
+                    dep["image"] = f"{base}:{tag.replace('-rollback', '')}"
+                else:
+                    dep["image"] = f"{base}:{tag}-rollback"
+            else:
+                dep["image"] = f"{img}:previous"
+
+        # Replace pods
+        old_pods = [p for p in mock_data._MOCK_STATE["pods"] if p["deployment"] == name and p["namespace"] == namespace]
+        for p in old_pods:
+            mock_data._MOCK_STATE["pods"].remove(p)
+            
+        for p in old_pods:
+            suffix = f"{''.join(random.choices('abcdef0123456789', k=5))}-{''.join(random.choices('abcdef0123456789', k=5))}"
+            mock_data._MOCK_STATE["pods"].append({
+                "name": f"{name}-{suffix}",
+                "namespace": namespace,
+                "status": "Running",
+                "restarts": 0,
+                "node": p.get("node", random.choice(["kind-worker", "kind-worker2"])),
+                "age": "1s",
+                "created_at": now_iso,
+                "ip": f"10.244.{random.randint(0, 3)}.{random.randint(2, 254)}",
+                "deployment": name,
+            })
                 
         return ActionResponse(
             success=True,
