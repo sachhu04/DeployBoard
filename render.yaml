@@ -1,0 +1,7 @@
+services:
+  - type: web
+    name: deployboard-api
+    env: docker
+    dockerContext: ./backend
+    dockerfilePath: ./backend/Dockerfile
+    plan: free
