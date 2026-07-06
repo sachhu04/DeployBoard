@@ -2,7 +2,12 @@ import subprocess
 import threading
 import os
 import shutil
+import time
+import random
 from typing import Dict, Any, Optional
+from datetime import datetime, timezone
+from app.k8s.client import get_kube_client
+from app.k8s.mock_data import _MOCK_STATE, _init_mock_state
 
 # Global dictionary to track build statuses
 # In a real app, this would be in a database
@@ -117,13 +122,105 @@ spec:
     except Exception as e:
         update_status(app_name, "failed", str(e), error=True)
 
+def _mock_pipeline_worker(app_name: str, repo_url: str):
+    try:
+        # Simulate cloning
+        update_status(app_name, "cloning", f"Running: git clone {repo_url} /tmp/{app_name}")
+        time.sleep(2)
+        update_status(app_name, None, f"Cloning into '/tmp/{app_name}'...")
+        update_status(app_name, None, "Receiving objects: 100% (235/235), 1.2MB | 4.34 MiB/s, done.")
+        update_status(app_name, None, "Resolving deltas: 100% (45/45), done.")
+        time.sleep(1)
+        
+        # Simulate building
+        update_status(app_name, "building", "Locating Dockerfile...")
+        time.sleep(1)
+        update_status(app_name, None, "Found Dockerfile at: /tmp/app/Dockerfile")
+        update_status(app_name, None, f"Running: docker build -t {app_name}:latest -f /tmp/app/Dockerfile /tmp/app")
+        update_status(app_name, None, "Step 1/5 : FROM node:20-alpine")
+        time.sleep(1)
+        update_status(app_name, None, " ---> 3b8d14v8b1")
+        update_status(app_name, None, "Step 2/5 : WORKDIR /app")
+        time.sleep(1)
+        update_status(app_name, None, " ---> 9f12c1c1f2")
+        update_status(app_name, None, "Step 3/5 : COPY package.json .")
+        time.sleep(0.5)
+        update_status(app_name, None, " ---> 1b2e1f4d8a")
+        update_status(app_name, None, "Step 4/5 : RUN npm install")
+        time.sleep(2.5)
+        update_status(app_name, None, "added 142 packages, and audited 143 packages in 2s")
+        update_status(app_name, None, " ---> c9d8e7f6a5")
+        update_status(app_name, None, "Step 5/5 : COPY . .")
+        time.sleep(0.5)
+        update_status(app_name, None, " ---> 4a3b2c1d0e")
+        update_status(app_name, None, f"Successfully built {app_name}:latest")
+        
+        # Simulate pushing/loading
+        update_status(app_name, "loading", f"Running: kind load docker-image {app_name}:latest --name deployboard")
+        update_status(app_name, None, "Image: \"{app_name}:latest\" with ID \"sha256:4a3b2c1d0e\" not yet present on node \"deployboard-control-plane\", loading...")
+        time.sleep(2)
+        
+        # Simulate deploying
+        update_status(app_name, "deploying", f"Running: kubectl apply -f /tmp/{app_name}_k8s.yaml")
+        time.sleep(1)
+        update_status(app_name, None, f"deployment.apps/{app_name} created")
+        update_status(app_name, None, f"service/{app_name}-svc created")
+        
+        # Inject into mock data
+        _init_mock_state()
+        now_iso = datetime.now(timezone.utc).isoformat()
+        
+        _MOCK_STATE["deployments"].insert(0, {
+            "name": app_name,
+            "namespace": "default",
+            "ready_replicas": 1,
+            "desired_replicas": 1,
+            "status": "Available",
+            "image": f"{app_name}:latest",
+            "age": "1s",
+            "created_at": now_iso,
+        })
+        
+        _MOCK_STATE["pods"].insert(0, {
+            "name": f"{app_name}-{''.join(random.choices('abcdef0123456789', k=5))}-{''.join(random.choices('abcdef0123456789', k=5))}",
+            "namespace": "default",
+            "status": "Running",
+            "restarts": 0,
+            "node": "kind-worker",
+            "age": "1s",
+            "created_at": now_iso,
+            "ip": f"10.244.{random.randint(0, 3)}.{random.randint(2, 254)}",
+            "deployment": app_name,
+        })
+        
+        _MOCK_STATE["services"].insert(0, {
+            "name": f"{app_name}-svc",
+            "namespace": "default",
+            "type": "ClusterIP",
+            "cluster_ip": f"10.96.{random.randint(0, 255)}.{random.randint(1, 254)}",
+            "port": 80,
+            "target_port": 3000,
+            "age": "1s",
+        })
+        
+        update_status(app_name, "completed", "Successfully deployed to Mock Kubernetes!")
+        
+    except Exception as e:
+        update_status(app_name, "failed", str(e), error=True)
+
 def start_pipeline(app_name: str, repo_url: str):
     """Starts the CI/CD pipeline in a background thread."""
     if app_name in build_statuses and build_statuses[app_name]["status"] not in ["completed", "failed"]:
         raise ValueError(f"Build for {app_name} is already in progress.")
         
     build_statuses[app_name] = {"status": "pending", "logs": [], "error": False}
-    thread = threading.Thread(target=_pipeline_worker, args=(app_name, repo_url))
+    
+    kube = get_kube_client()
+    if kube.is_mock:
+        thread = threading.Thread(target=_mock_pipeline_worker, args=(app_name, repo_url))
+    else:
+        thread = threading.Thread(target=_pipeline_worker, args=(app_name, repo_url))
+        
     thread.daemon = True
     thread.start()
 
