@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  Box,
+  Boxes,
   Layers,
   Container,
   Globe,
@@ -51,7 +51,7 @@ export function AppSidebar() {
       <SidebarHeader className="px-4 py-5">
         <Link href="/" className="flex items-center gap-2.5 group">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-yellow text-yellow-foreground">
-            <Box className="h-4.5 w-4.5" />
+            <Boxes className="h-4.5 w-4.5" />
           </div>
           <div>
             <span className="text-sm font-semibold tracking-tight block">
