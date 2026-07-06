@@ -7,7 +7,7 @@ import random
 from typing import Dict, Any, Optional
 from datetime import datetime, timezone
 from app.k8s.client import get_kube_client
-from app.k8s.mock_data import _MOCK_STATE, _init_mock_state
+from app.k8s import mock_data
 
 # Global dictionary to track build statuses
 # In a real app, this would be in a database
@@ -167,10 +167,10 @@ def _mock_pipeline_worker(app_name: str, repo_url: str):
         update_status(app_name, None, f"service/{app_name}-svc created")
         
         # Inject into mock data
-        _init_mock_state()
+        mock_data._init_mock_state()
         now_iso = datetime.now(timezone.utc).isoformat()
         
-        _MOCK_STATE["deployments"].insert(0, {
+        mock_data._MOCK_STATE["deployments"].insert(0, {
             "name": app_name,
             "namespace": "default",
             "ready_replicas": 1,
@@ -181,7 +181,7 @@ def _mock_pipeline_worker(app_name: str, repo_url: str):
             "created_at": now_iso,
         })
         
-        _MOCK_STATE["pods"].insert(0, {
+        mock_data._MOCK_STATE["pods"].insert(0, {
             "name": f"{app_name}-{''.join(random.choices('abcdef0123456789', k=5))}-{''.join(random.choices('abcdef0123456789', k=5))}",
             "namespace": "default",
             "status": "Running",
@@ -193,7 +193,7 @@ def _mock_pipeline_worker(app_name: str, repo_url: str):
             "deployment": app_name,
         })
         
-        _MOCK_STATE["services"].insert(0, {
+        mock_data._MOCK_STATE["services"].insert(0, {
             "name": f"{app_name}-svc",
             "namespace": "default",
             "type": "ClusterIP",
