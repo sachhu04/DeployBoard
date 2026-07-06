@@ -2,11 +2,18 @@
 
 ## Current Version: v1.0.0 (The Simulation Engine)
 **Status:** Stable / Released
-DeployBoard currently runs as a cloud-hosted operations dashboard using a highly realistic **Mock State Engine**. 
+
+DeployBoard is currently built with two distinct deployment modes to maximize both portfolio utility and developer experience:
+
+### 1. Local Development Mode (Real Kubernetes)
+When cloned and run locally on a developer's machine using the provided `Makefile`, DeployBoard connects seamlessly to a real `kind` Kubernetes cluster. In this mode, the backend utilizes the user's native Docker daemon and Kubeconfig to execute authentic CI/CD pipelines and manipulate live cluster resources.
+
+### 2. Web Demo Mode (The Mock Engine)
+Because free-tier serverless hosting platforms (like Render) do not provide root access to an underlying Docker daemon or allow persistent Kubernetes cluster hosting, the public-facing version of DeployBoard operates via a highly realistic **Mock State Engine**. 
 - **Frontend:** Hosted on Vercel
 - **Backend:** Hosted on Render
 - **Database/Cluster:** In-memory Mock State simulating Kubernetes ReplicaSets, Deployments, and Pods.
-- **Goal Achieved:** Provides a zero-cost, instantly accessible portfolio demonstration of Kubernetes management without the overhead of cloud infrastructure.
+- **Goal Achieved:** Provides a zero-cost, instantly accessible portfolio demonstration of Kubernetes management without the overhead of cloud infrastructure, accurately mimicking how Kubernetes self-heals and handles state transitions.
 
 ---
 
