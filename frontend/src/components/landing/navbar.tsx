@@ -24,24 +24,34 @@ export function Navbar() {
         </Link>
 
         <nav className="hidden md:flex items-center gap-8">
-          <a
-            href="#features"
+          <Link
+            href="/#features"
             className="text-sm text-muted-foreground hover:text-foreground transition-colors"
           >
             Features
-          </a>
-          <a
-            href="#architecture"
+          </Link>
+          <Link
+            href="/#architecture"
             className="text-sm text-muted-foreground hover:text-foreground transition-colors"
           >
             Architecture
-          </a>
-          <a
-            href="#learn"
+          </Link>
+          <Link
+            href="/#learn"
             className="text-sm text-muted-foreground hover:text-foreground transition-colors"
           >
             Learn kubectl
-          </a>
+          </Link>
+          <Link
+            href="/docs"
+            className="text-sm font-medium text-yellow hover:text-yellow/80 transition-colors flex items-center gap-1.5 animate-pulse"
+          >
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-yellow opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-yellow"></span>
+            </span>
+            Important Info
+          </Link>
         </nav>
 
         <div className="flex items-center gap-3">

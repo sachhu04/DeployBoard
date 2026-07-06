@@ -5,7 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { request } from "@/lib/api";
-import { RocketIcon, RefreshCwIcon, CheckCircleIcon, XCircleIcon } from "lucide-react";
+import { RocketIcon, RefreshCwIcon, CheckCircleIcon, XCircleIcon, InfoIcon } from "lucide-react";
 
 export function DeployDialog() {
   const [open, setOpen] = useState(false);
@@ -57,7 +57,12 @@ export function DeployDialog() {
       </DialogTrigger>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Deploy from GitHub</DialogTitle>
+          <DialogTitle className="flex items-center gap-2">
+            Deploy from GitHub
+            <a href="/docs" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-yellow transition-colors" title="Read about Demo Mode limitations">
+              <InfoIcon className="h-4 w-4" />
+            </a>
+          </DialogTitle>
         </DialogHeader>
 
         {status === "idle" ? (

@@ -3,6 +3,7 @@ Mock data generator for demo mode.
 
 Produces realistic Kubernetes-style responses so the frontend can be fully
 developed and demonstrated without a running cluster.
+Maintains state in-memory so scaling and pod generation are consistent.
 """
 
 from __future__ import annotations
@@ -62,6 +63,8 @@ _LOG_LINES = [
     "DEBUG: WebSocket connection established from client #89",
 ]
 
+# Global state to maintain consistency across API calls
+_MOCK_STATE: dict[str, Any] = {}
 
 def _age_string(minutes: int) -> str:
     if minutes < 60:
@@ -79,8 +82,14 @@ def _random_age() -> tuple[str, str]:
     return _age_string(minutes), created.isoformat()
 
 
-def mock_namespaces() -> list[dict[str, Any]]:
-    return [
+def _init_mock_state():
+    global _MOCK_STATE
+    if _MOCK_STATE:
+        return
+        
+    random.seed(42)  # Seed so the initial state is relatively consistent
+    
+    namespaces = [
         {
             "name": ns,
             "status": "Active",
@@ -88,13 +97,12 @@ def mock_namespaces() -> list[dict[str, Any]]:
         }
         for ns in _NAMESPACES
     ]
-
-
-def mock_deployments(namespace: str | None = None) -> list[dict[str, Any]]:
-    results = []
-    target_ns = [namespace] if namespace and namespace != "all" else _NAMESPACES[:3]
-
-    for ns in target_ns:
+    
+    deployments = []
+    pods = []
+    services = []
+    
+    for ns in _NAMESPACES[:3]:
         count = random.randint(2, 4) if ns != "kube-system" else 1
         for name in random.sample(_DEPLOYMENT_NAMES, min(count, len(_DEPLOYMENT_NAMES))):
             desired = random.choice([1, 2, 3, 4])
@@ -102,7 +110,7 @@ def mock_deployments(namespace: str | None = None) -> list[dict[str, Any]]:
             age, created = _random_age()
             status = "Available" if ready == desired else "Progressing"
 
-            results.append({
+            dep = {
                 "name": name,
                 "namespace": ns,
                 "ready_replicas": ready,
@@ -111,56 +119,42 @@ def mock_deployments(namespace: str | None = None) -> list[dict[str, Any]]:
                 "image": random.choice(_IMAGES),
                 "age": age,
                 "created_at": created,
-            })
-
-    return results
-
-
-def mock_pods(namespace: str | None = None) -> list[dict[str, Any]]:
-    deployments = mock_deployments(namespace)
-    pods = []
-
-    for dep in deployments:
-        for i in range(dep["ready_replicas"]):
-            suffix = f"{''.join(random.choices('abcdef0123456789', k=5))}-{''.join(random.choices('abcdef0123456789', k=5))}"
-            age, created = _random_age()
-            restarts = random.choices([0, 0, 0, 1, 2, 5], weights=[60, 20, 10, 5, 3, 2])[0]
-            statuses = ["Running"] * 85 + ["Pending"] * 5 + ["CrashLoopBackOff"] * 5 + ["Completed"] * 5
-            pods.append({
-                "name": f"{dep['name']}-{suffix}",
-                "namespace": dep["namespace"],
-                "status": random.choice(statuses),
-                "restarts": restarts,
-                "node": random.choice(_NODE_NAMES),
-                "age": age,
-                "created_at": created,
-                "ip": f"10.244.{random.randint(0, 3)}.{random.randint(2, 254)}",
-            })
-
-    return pods
-
-
-def mock_services(namespace: str | None = None) -> list[dict[str, Any]]:
-    target_ns = [namespace] if namespace and namespace != "all" else _NAMESPACES[:3]
-    services = []
-
-    for ns in target_ns:
-        deployments = [d for d in mock_deployments(ns) if d["namespace"] == ns]
-        for dep in deployments[:3]:
-            svc_type = random.choice(["ClusterIP", "ClusterIP", "ClusterIP", "NodePort", "LoadBalancer"])
-            port = random.choice([80, 443, 3000, 8080, 8443, 9090])
-            age, _ = _random_age()
-            services.append({
-                "name": f"{dep['name']}-svc",
-                "namespace": ns,
-                "type": svc_type,
-                "cluster_ip": f"10.96.{random.randint(0, 255)}.{random.randint(1, 254)}",
-                "port": port,
-                "target_port": port,
-                "age": age,
-            })
-
-    # Always include kubernetes default service
+            }
+            deployments.append(dep)
+            
+            # Generate Pods for this deployment
+            for i in range(ready):
+                suffix = f"{''.join(random.choices('abcdef0123456789', k=5))}-{''.join(random.choices('abcdef0123456789', k=5))}"
+                pod_age, pod_created = _random_age()
+                restarts = random.choices([0, 0, 0, 1, 2, 5], weights=[60, 20, 10, 5, 3, 2])[0]
+                statuses = ["Running"] * 85 + ["Pending"] * 5 + ["CrashLoopBackOff"] * 5 + ["Completed"] * 5
+                pods.append({
+                    "name": f"{name}-{suffix}",
+                    "namespace": ns,
+                    "status": random.choice(statuses),
+                    "restarts": restarts,
+                    "node": random.choice(_NODE_NAMES),
+                    "age": pod_age,
+                    "created_at": pod_created,
+                    "ip": f"10.244.{random.randint(0, 3)}.{random.randint(2, 254)}",
+                    "deployment": name,
+                })
+                
+            # Generate Service for some deployments
+            if random.random() > 0.3:
+                svc_type = random.choice(["ClusterIP", "ClusterIP", "ClusterIP", "NodePort", "LoadBalancer"])
+                port = random.choice([80, 443, 3000, 8080, 8443, 9090])
+                svc_age, _ = _random_age()
+                services.append({
+                    "name": f"{name}-svc",
+                    "namespace": ns,
+                    "type": svc_type,
+                    "cluster_ip": f"10.96.{random.randint(0, 255)}.{random.randint(1, 254)}",
+                    "port": port,
+                    "target_port": port,
+                    "age": svc_age,
+                })
+                
     services.insert(0, {
         "name": "kubernetes",
         "namespace": "default",
@@ -170,11 +164,45 @@ def mock_services(namespace: str | None = None) -> list[dict[str, Any]]:
         "target_port": 6443,
         "age": "30d",
     })
+    
+    random.seed() # reset seed
+    
+    _MOCK_STATE = {
+        "namespaces": namespaces,
+        "deployments": deployments,
+        "pods": pods,
+        "services": services
+    }
 
-    return services
+
+def mock_namespaces() -> list[dict[str, Any]]:
+    _init_mock_state()
+    return _MOCK_STATE["namespaces"]
+
+
+def mock_deployments(namespace: str | None = None) -> list[dict[str, Any]]:
+    _init_mock_state()
+    if not namespace or namespace == "all":
+        return _MOCK_STATE["deployments"]
+    return [d for d in _MOCK_STATE["deployments"] if d["namespace"] == namespace]
+
+
+def mock_pods(namespace: str | None = None) -> list[dict[str, Any]]:
+    _init_mock_state()
+    if not namespace or namespace == "all":
+        return _MOCK_STATE["pods"]
+    return [p for p in _MOCK_STATE["pods"] if p["namespace"] == namespace]
+
+
+def mock_services(namespace: str | None = None) -> list[dict[str, Any]]:
+    _init_mock_state()
+    if not namespace or namespace == "all":
+        return _MOCK_STATE["services"]
+    return [s for s in _MOCK_STATE["services"] if s["namespace"] == namespace]
 
 
 def mock_events(namespace: str | None = None) -> list[dict[str, Any]]:
+    # Events can stay random as they are transient
     event_types = [
         ("Normal", "Scheduled", "Successfully assigned {ns}/{pod} to {node}"),
         ("Normal", "Pulled", "Container image \"{image}\" already present on machine"),
@@ -222,8 +250,12 @@ def mock_events(namespace: str | None = None) -> list[dict[str, Any]]:
 
 
 def mock_deployment_yaml(name: str, namespace: str = "default") -> str:
-    replicas = random.choice([1, 2, 3])
-    image = random.choice(_IMAGES)
+    _init_mock_state()
+    dep = next((d for d in _MOCK_STATE["deployments"] if d["name"] == name and d["namespace"] == namespace), None)
+    
+    replicas = dep["desired_replicas"] if dep else random.choice([1, 2, 3])
+    image = dep["image"] if dep else random.choice(_IMAGES)
+    
     return f"""apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -275,6 +307,7 @@ def mock_log_line() -> str:
 
 
 def mock_configmaps(namespace: str | None = None) -> list[dict[str, Any]]:
+    # Random configmaps is fine
     target_ns = [namespace] if namespace and namespace != "all" else _NAMESPACES[:3]
     cm_names = ["app-config", "db-config", "feature-flags", "redis-settings", "ui-config"]
     
@@ -295,6 +328,7 @@ def mock_configmaps(namespace: str | None = None) -> list[dict[str, Any]]:
 
 
 def mock_secrets(namespace: str | None = None) -> list[dict[str, Any]]:
+    # Random secrets is fine
     target_ns = [namespace] if namespace and namespace != "all" else _NAMESPACES[:3]
     secret_names = ["db-credentials", "api-tokens", "tls-certs", "jwt-secret", "oauth-keys"]
     secret_types = ["Opaque", "kubernetes.io/tls", "kubernetes.io/service-account-token", "Opaque", "Opaque"]
