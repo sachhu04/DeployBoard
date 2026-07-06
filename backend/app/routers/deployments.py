@@ -155,8 +155,6 @@ def restart_deployment(name: str, namespace: str = Query("default")):
         )
 
     try:
-        from datetime import datetime, timezone
-
         now = datetime.now(timezone.utc).isoformat()
         body = {
             "spec": {
