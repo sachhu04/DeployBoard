@@ -15,7 +15,7 @@ router = APIRouter(prefix="/api/namespaces", tags=["namespaces"])
 
 
 @router.get("", response_model=list[NamespaceResponse])
-async def list_namespaces():
+def list_namespaces():
     kube = get_kube_client()
 
     if kube.is_mock:

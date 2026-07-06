@@ -1,6 +1,6 @@
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect
-import logging
 import asyncio
+import logging
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from kubernetes.stream import stream
 
 from app.k8s.client import get_kube_client
@@ -10,7 +10,9 @@ router = APIRouter(prefix="/ws/exec", tags=["exec"])
 
 @router.websocket("/{namespace}/{pod}")
 async def exec_shell(websocket: WebSocket, namespace: str, pod: str):
+    logger.info(f"Incoming Exec WebSocket request for {namespace}/{pod}")
     await websocket.accept()
+    logger.info("WebSocket accepted!")
     kube = get_kube_client()
     
     if kube.is_mock:
@@ -43,14 +45,12 @@ async def exec_shell(websocket: WebSocket, namespace: str, pod: str):
             pass
         return
 
-    # Real Kubernetes Exec
-    exec_command = [
-        "/bin/sh",
-        "-c",
-        "TERM=xterm-256color; export TERM; [ -x /bin/bash ] && ([ -x /usr/bin/script ] && /usr/bin/script -q -c \"/bin/bash\" /dev/null || exec /bin/bash) || exec /bin/sh"
-    ]
+    exec_command = ["/bin/sh"]
     
     try:
+        # Send a welcome message so the terminal isn't totally empty!
+        await websocket.send_text(f"\\r\\n\\033[1;32mConnected to pod {pod}\\033[0m\\r\\n")
+        
         resp = stream(
             kube.core_v1.connect_get_namespaced_pod_exec,
             pod,

@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, useMemo } from "react";
 import { Pause, Play, Trash2, Search, Wifi, WifiOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ScrollArea } from "@/components/ui/scroll-area";
+
 import {
   Select,
   SelectContent,
@@ -147,7 +147,7 @@ export function LogViewer() {
           <div className="w-16" /> {/* Spacer for balance */}
         </div>
 
-        <ScrollArea className="flex-1 bg-[#09090b]/90">
+        <div className="flex-1 overflow-y-auto bg-[#09090b]/90">
           <div className="p-4 font-mono text-xs leading-relaxed text-[#00ff00]">
           {filteredLogs.length === 0 ? (
             <div className="flex items-center justify-center py-20 text-muted-foreground text-sm">
@@ -182,7 +182,7 @@ export function LogViewer() {
           )}
           <div ref={scrollRef} />
         </div>
-        </ScrollArea>
+        </div>
       </div>
 
       {/* Auto-scroll toggle */}

@@ -19,11 +19,15 @@ export function DeployDialog() {
     if (["pending", "cloning", "building", "loading", "deploying"].includes(status)) {
       interval = setInterval(async () => {
         try {
-          const res = await request<any>(`/api/ci/status/${appName}`);
+          interface StatusResponse {
+            status: "idle" | "pending" | "cloning" | "building" | "loading" | "deploying" | "completed" | "failed";
+            logs?: string[];
+          }
+          const res = await request<StatusResponse>(`/api/ci/status/${appName}`);
           setStatus(res.status);
           setLogs(res.logs || []);
-        } catch (e) {
-          console.error(e);
+        } catch (err) {
+          console.error(err);
         }
       }, 1000);
     }
@@ -39,7 +43,7 @@ export function DeployDialog() {
         method: "POST",
         body: JSON.stringify({ app_name: appName, repo_url: repoUrl })
       });
-    } catch (e) {
+    } catch {
       setStatus("failed");
       setLogs(["Failed to trigger deployment pipeline"]);
     }

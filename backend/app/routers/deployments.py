@@ -17,7 +17,7 @@ router = APIRouter(prefix="/api/deployments", tags=["deployments"])
 
 
 @router.get("", response_model=list[DeploymentResponse])
-async def list_deployments(namespace: Optional[str] = Query(None)):
+def list_deployments(namespace: Optional[str] = Query(None)):
     kube = get_kube_client()
 
     if kube.is_mock:
@@ -31,17 +31,22 @@ async def list_deployments(namespace: Optional[str] = Query(None)):
 
         results = []
         for d in deps.items:
-            ready = d.status.ready_replicas or 0
-            desired = d.spec.replicas or 0
+            status_obj = getattr(d, "status", None)
+            spec_obj = getattr(d, "spec", None)
+            
+            ready = (status_obj.ready_replicas or 0) if status_obj else 0
+            desired = (spec_obj.replicas or 0) if spec_obj else 0
             age_delta = d.metadata.creation_timestamp
-            image = d.spec.template.spec.containers[0].image if d.spec.template.spec.containers else "unknown"
+            
+            containers = spec_obj.template.spec.containers if spec_obj and spec_obj.template and spec_obj.template.spec else []
+            image = containers[0].image if containers else "unknown"
 
             results.append(DeploymentResponse(
                 name=d.metadata.name,
                 namespace=d.metadata.namespace,
                 ready_replicas=ready,
                 desired_replicas=desired,
-                status="Available" if ready == desired else "Progressing",
+                status="Available" if ready == desired and desired > 0 else "Progressing" if desired > 0 else "Terminating",
                 image=image,
                 age=str(age_delta),
                 created_at=age_delta.isoformat() if age_delta else "",
@@ -129,7 +134,7 @@ def restart_deployment(name: str, namespace: str = Query("default")):
 
 
 @router.post("/{name}/rollback", response_model=ActionResponse)
-async def rollback_deployment(name: str, namespace: str = Query("default")):
+def rollback_deployment(name: str, namespace: str = Query("default")):
     kube = get_kube_client()
     kubectl_cmd = f"kubectl rollout undo deployment {name} -n {namespace}"
     explanation = (
@@ -179,28 +184,35 @@ async def rollback_deployment(name: str, namespace: str = Query("default")):
 
 
 @router.get("/{name}/yaml")
-async def get_deployment_yaml(name: str, namespace: str = Query("default")):
+def get_deployment_yaml(name: str, namespace: str = Query("default")):
     kube = get_kube_client()
 
     if kube.is_mock:
         return {"yaml": mock_deployment_yaml(name, namespace)}
 
     try:
-        dep = kube.apps_v1.read_namespaced_deployment(name, namespace)
-        dep_dict = dep.to_dict()
-        return {"yaml": yaml.dump(dep_dict, default_flow_style=False)}
+        import subprocess
+        process = subprocess.run(
+            ["kubectl", "get", "deployment", name, "-n", namespace, "-o", "yaml"],
+            capture_output=True,
+            text=True
+        )
+        if process.returncode != 0:
+            raise HTTPException(status_code=500, detail=process.stderr)
+            
+        return {"yaml": process.stdout}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.put("/{name}/yaml", response_model=ActionResponse)
-async def apply_deployment_yaml(
+def apply_deployment_yaml(
     name: str,
     body: ApplyYamlRequest,
     namespace: str = Query("default"),
 ):
     kube = get_kube_client()
-    kubectl_cmd = f"kubectl apply -f deployment.yaml"
+    kubectl_cmd = "kubectl apply -f deployment.yaml"
     explanation = (
         f"Applies the provided YAML configuration to the deployment '{name}'. "
         f"Kubernetes will calculate the difference and update the resource."
@@ -215,26 +227,58 @@ async def apply_deployment_yaml(
         )
 
     try:
-        # Load the YAML content
+        # Load YAML just to validate it's valid YAML and matches the name
         try:
             dep_dict = yaml.safe_load(body.yaml_content)
         except yaml.YAMLError as exc:
             raise HTTPException(status_code=400, detail=f"Invalid YAML: {exc}")
             
-        # Ensure name and namespace match the URL parameters
         if dep_dict.get("metadata", {}).get("name") != name:
             raise HTTPException(status_code=400, detail="Deployment name in YAML does not match URL")
 
-        # Replace the deployment
-        kube.apps_v1.replace_namespaced_deployment(name, namespace, dep_dict)
+        # Use kubectl apply directly for robust 3-way merge patching
+        import subprocess
+        process = subprocess.run(
+            ["kubectl", "apply", "-n", namespace, "-f", "-"],
+            input=body.yaml_content.encode("utf-8"),
+            capture_output=True
+        )
+        
+        if process.returncode != 0:
+            raise HTTPException(status_code=500, detail=process.stderr.decode("utf-8"))
 
         return ActionResponse(
             success=True,
-            message=f"Applied YAML configuration for {name}",
+            message=f"Applied YAML configuration for {name}\\n{process.stdout.decode('utf-8').strip()}",
             kubectl_command=kubectl_cmd,
             explanation=explanation,
         )
     except HTTPException:
         raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.delete("/{name}", response_model=ActionResponse)
+def delete_deployment(name: str, namespace: str = Query("default")):
+    kube = get_kube_client()
+    kubectl_cmd = f"kubectl delete deployment {name} -n {namespace}"
+    explanation = f"Deletes the deployment '{name}' and all its associated pods."
+
+    if kube.is_mock:
+        return ActionResponse(
+            success=True,
+            message=f"Deleted {name} (mock)",
+            kubectl_command=kubectl_cmd,
+            explanation=explanation,
+        )
+
+    try:
+        kube.apps_v1.delete_namespaced_deployment(name, namespace)
+        return ActionResponse(
+            success=True,
+            message=f"Deleted deployment {name}",
+            kubectl_command=kubectl_cmd,
+            explanation=explanation,
+        )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

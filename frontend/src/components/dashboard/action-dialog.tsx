@@ -14,11 +14,12 @@ import { KubectlHint } from "./kubectl-hint";
 import {
   useRestartDeployment,
   useRollbackDeployment,
+  useDeleteDeployment,
 } from "@/lib/hooks/use-deployments";
 import type { Deployment } from "@/lib/types";
 
 interface ActionDialogProps {
-  type: "restart" | "rollback";
+  type: "restart" | "rollback" | "delete";
   deployment: Deployment | null;
   onClose: () => void;
 }
@@ -45,12 +46,24 @@ const config = {
     buttonLabel: "Rollback",
     buttonLabelPending: "Rolling back...",
   },
+  delete: {
+    title: "Delete Deployment",
+    description:
+      "This will permanently delete the deployment and all associated pods.",
+    commandFn: (name: string, ns: string) =>
+      `kubectl delete deployment ${name} -n ${ns}`,
+    explanationFn: (name: string) =>
+      `Deletes the deployment '${name}'. This action is destructive and cannot be undone.`,
+    buttonLabel: "Delete",
+    buttonLabelPending: "Deleting...",
+  },
 };
 
 export function ActionDialog({ type, deployment, onClose }: ActionDialogProps) {
   const restartMutation = useRestartDeployment();
   const rollbackMutation = useRollbackDeployment();
-  const mutation = type === "restart" ? restartMutation : rollbackMutation;
+  const deleteMutation = useDeleteDeployment();
+  const mutation = type === "restart" ? restartMutation : type === "rollback" ? rollbackMutation : deleteMutation;
   const cfg = config[type];
 
   const [error, setError] = useState<string | null>(null);
@@ -64,8 +77,8 @@ export function ActionDialog({ type, deployment, onClose }: ActionDialogProps) {
         namespace: deployment.namespace,
       });
       onClose();
-    } catch (e: any) {
-      const msg = e.message || "An unexpected error occurred.";
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : "An unexpected error occurred.";
       setError(msg);
     }
   };
@@ -108,10 +121,13 @@ export function ActionDialog({ type, deployment, onClose }: ActionDialogProps) {
           </Button>
           <Button
             onClick={handleAction}
+            variant={type === "delete" ? "destructive" : "default"}
             disabled={mutation.isPending}
             className={
               type === "rollback"
                 ? "bg-yellow-500 text-black hover:bg-yellow-500/90"
+                : type === "delete"
+                ? ""
                 : "bg-yellow text-yellow-foreground hover:bg-yellow/90"
             }
           >

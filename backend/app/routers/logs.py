@@ -51,7 +51,7 @@ async def stream_pod_logs(
 
         log_stream = kube.core_v1.read_namespaced_pod_log(**kwargs)
 
-        q = asyncio.Queue()
+        q: asyncio.Queue[str | None] = asyncio.Queue()
         loop = asyncio.get_running_loop()
 
         def read_sync():
@@ -69,10 +69,10 @@ async def stream_pod_logs(
         thread.start()
 
         while True:
-            line = await q.get()
-            if line is None:
+            log_line = await q.get()
+            if log_line is None:
                 break
-            await websocket.send_text(line)
+            await websocket.send_text(log_line)
 
     except WebSocketDisconnect:
         logger.debug("Client disconnected from log stream for %s/%s", namespace, pod_name)

@@ -1,0 +1,3 @@
+[run]
+omit =
+    app/k8s/mock_data.py

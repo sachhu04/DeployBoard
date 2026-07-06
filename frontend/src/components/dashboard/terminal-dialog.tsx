@@ -50,9 +50,17 @@ export function TerminalDialog({ pod, onClose }: TerminalDialogProps) {
     const fitAddon = new FitAddon();
     term.loadAddon(fitAddon);
     
-    // Mount terminal
-    term.open(terminalRef.current);
-    fitAddon.fit();
+    // Mount terminal after a short delay to let Dialog CSS animation finish
+    const timer = setTimeout(() => {
+      if (terminalRef.current) {
+        try {
+          term.open(terminalRef.current);
+          fitAddon.fit();
+        } catch (e) {
+          console.warn("xterm mount/fit error", e);
+        }
+      }
+    }, 100);
 
     // Connect WebSocket
     const wsUrl = getExecWebSocketUrl(pod.namespace, pod.name);
@@ -93,6 +101,7 @@ export function TerminalDialog({ pod, onClose }: TerminalDialogProps) {
     window.addEventListener("resize", handleResize);
 
     return () => {
+      clearTimeout(timer);
       window.removeEventListener("resize", handleResize);
       ws.close();
       term.dispose();

@@ -16,7 +16,7 @@ router = APIRouter(prefix="/api/services", tags=["services"])
 
 
 @router.get("", response_model=list[ServiceResponse])
-async def list_services(namespace: Optional[str] = Query(None)):
+def list_services(namespace: Optional[str] = Query(None)):
     kube = get_kube_client()
 
     if kube.is_mock:

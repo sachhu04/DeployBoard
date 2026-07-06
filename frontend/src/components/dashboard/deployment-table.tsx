@@ -8,6 +8,7 @@ import {
   RotateCcw,
   Undo2,
   FileCode,
+  Trash2,
 } from "lucide-react";
 import {
   Table,
@@ -43,6 +44,7 @@ export function DeploymentTable({
   const [scaleTarget, setScaleTarget] = useState<Deployment | null>(null);
   const [restartTarget, setRestartTarget] = useState<Deployment | null>(null);
   const [rollbackTarget, setRollbackTarget] = useState<Deployment | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Deployment | null>(null);
   const [yamlTarget, setYamlTarget] = useState<Deployment | null>(null);
 
   if (isLoading) {
@@ -152,6 +154,10 @@ export function DeploymentTable({
                         <FileCode className="h-4 w-4 mr-2" />
                         View YAML
                       </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => setDeleteTarget(dep)} className="text-red-500 focus:text-red-500 focus:bg-red-500/10">
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Delete
+                      </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </TableCell>
@@ -180,6 +186,11 @@ export function DeploymentTable({
         type="rollback"
         deployment={rollbackTarget}
         onClose={() => setRollbackTarget(null)}
+      />
+      <ActionDialog
+        type="delete"
+        deployment={deleteTarget}
+        onClose={() => setDeleteTarget(null)}
       />
       <YamlDialog
         deployment={yamlTarget}

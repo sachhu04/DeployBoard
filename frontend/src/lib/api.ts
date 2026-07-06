@@ -61,6 +61,10 @@ export const api = {
       `/api/deployments/${name}/scale?namespace=${namespace}`,
       { method: "POST", body: JSON.stringify({ replicas }) },
     ),
+  deleteDeployment: (name: string, namespace = "default") =>
+    request<ActionResponse>(`/api/deployments/${name}?namespace=${namespace}`, {
+      method: "DELETE",
+    }),
   restartDeployment: (name: string, namespace = "default") =>
     request<ActionResponse>(
       `/api/deployments/${name}/restart?namespace=${namespace}`,
@@ -127,10 +131,26 @@ export const api = {
 
 export function getLogWebSocketUrl(namespace: string, podName: string) {
   const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-  return `${protocol}//127.0.0.1:8000/ws/logs/${namespace}/${podName}`;
+  
+  // If API_BASE is absolute (e.g. http://localhost:8000), parse it
+  if (API_BASE.startsWith("http")) {
+    const url = new URL(API_BASE);
+    const wsProtocol = url.protocol === "https:" ? "wss:" : "ws:";
+    return `${wsProtocol}//${url.host}/ws/logs/${namespace}/${podName}`;
+  }
+  
+  // Fallback to relative
+  return `${protocol}//${window.location.host}/ws/logs/${namespace}/${podName}`;
 }
 
 export function getExecWebSocketUrl(namespace: string, podName: string) {
+  // If API_BASE is absolute (e.g. http://localhost:8000), parse it
+  if (API_BASE.startsWith("http")) {
+    const url = new URL(API_BASE);
+    const wsProtocol = url.protocol === "https:" ? "wss:" : "ws:";
+    return `${wsProtocol}//${url.host}/ws/exec/${namespace}/${podName}`;
+  }
+  
   const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-  return `${protocol}//127.0.0.1:8000/ws/exec/${namespace}/${podName}`;
+  return `${protocol}//${window.location.host}/ws/exec/${namespace}/${podName}`;
 }

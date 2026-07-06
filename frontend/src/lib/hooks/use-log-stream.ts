@@ -30,7 +30,11 @@ export function useLogStream({
   const bufferRef = useRef<string[]>([]);
 
   useEffect(() => {
-    if (!enabled || !podName || !namespace) return;
+    if (!enabled || !podName || !namespace || isPaused) return;
+
+    // Reset logs and buffer when pod/namespace changes
+    setLogs([]);
+    bufferRef.current = [];
 
     const wsUrl = getLogWebSocketUrl(namespace, podName);
     const ws = new WebSocket(wsUrl);
@@ -67,7 +71,7 @@ export function useLogStream({
       ws.close();
       wsRef.current = null;
     };
-  }, [namespace, podName, enabled]);
+  }, [namespace, podName, enabled, isPaused]);
 
   const pause = useCallback(() => {
     setIsPaused(true);

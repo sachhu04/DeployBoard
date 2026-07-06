@@ -16,7 +16,7 @@ router = APIRouter(prefix="/api/configmaps", tags=["configmaps"])
 
 
 @router.get("", response_model=list[ConfigMapResponse])
-async def list_configmaps(namespace: Optional[str] = Query(None)):
+def list_configmaps(namespace: Optional[str] = Query(None)):
     kube = get_kube_client()
 
     if kube.is_mock:

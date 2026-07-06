@@ -16,7 +16,7 @@ router = APIRouter(prefix="/api/events", tags=["events"])
 
 
 @router.get("", response_model=list[EventResponse])
-async def list_events(namespace: Optional[str] = Query(None)):
+def list_events(namespace: Optional[str] = Query(None)):
     kube = get_kube_client()
 
     if kube.is_mock:

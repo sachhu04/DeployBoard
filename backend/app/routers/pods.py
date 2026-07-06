@@ -16,7 +16,7 @@ router = APIRouter(prefix="/api/pods", tags=["pods"])
 
 
 @router.get("", response_model=list[PodResponse])
-async def list_pods(namespace: Optional[str] = Query(None)):
+def list_pods(namespace: Optional[str] = Query(None)):
     kube = get_kube_client()
 
     if kube.is_mock:
@@ -30,27 +30,35 @@ async def list_pods(namespace: Optional[str] = Query(None)):
 
         results = []
         for p in pods.items:
-            status = p.status.phase or "Unknown"
-            restarts = 0
-            if p.status.container_statuses:
-                restarts = sum(cs.restart_count for cs in p.status.container_statuses)
+            status_obj = getattr(p, "status", None)
+            spec_obj = getattr(p, "spec", None)
 
-            # Check for CrashLoopBackOff
-            if p.status.container_statuses:
-                for cs in p.status.container_statuses:
-                    if cs.state and cs.state.waiting and cs.state.waiting.reason:
+            status = status_obj.phase if status_obj and status_obj.phase else "Unknown"
+            
+            if p.metadata and getattr(p.metadata, "deletion_timestamp", None):
+                status = "Terminating"
+                
+            restarts = 0
+            if status_obj and status_obj.container_statuses:
+                restarts = sum(cs.restart_count for cs in status_obj.container_statuses)
+                # Check for CrashLoopBackOff
+                for cs in status_obj.container_statuses:
+                    if getattr(cs, "state", None) and getattr(cs.state, "waiting", None) and getattr(cs.state.waiting, "reason", None):
                         status = cs.state.waiting.reason
                         break
+
+            node_name = spec_obj.node_name if spec_obj and spec_obj.node_name else "Pending"
+            pod_ip = status_obj.pod_ip if status_obj and status_obj.pod_ip else "N/A"
 
             results.append(PodResponse(
                 name=p.metadata.name,
                 namespace=p.metadata.namespace,
                 status=status,
                 restarts=restarts,
-                node=p.spec.node_name or "Pending",
+                node=node_name,
                 age=str(p.metadata.creation_timestamp),
                 created_at=p.metadata.creation_timestamp.isoformat() if p.metadata.creation_timestamp else "",
-                ip=p.status.pod_ip or "N/A",
+                ip=pod_ip,
             ))
         return results
     except Exception as e:
@@ -58,7 +66,7 @@ async def list_pods(namespace: Optional[str] = Query(None)):
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.delete("/{name}", response_model=ActionResponse)
-async def delete_pod(name: str, namespace: str = Query("default")):
+def delete_pod(name: str, namespace: str = Query("default")):
     kube = get_kube_client()
 
     if kube.is_mock:

@@ -217,7 +217,7 @@ def mock_events(namespace: str | None = None) -> list[dict[str, Any]]:
             "count": random.randint(1, 12),
         })
 
-    events.sort(key=lambda e: e["last_seen"], reverse=True)
+    events.sort(key=lambda e: str(e["last_seen"]), reverse=True)
     return events
 
 

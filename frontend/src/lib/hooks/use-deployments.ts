@@ -68,6 +68,22 @@ export function useRollbackDeployment() {
   });
 }
 
+export function useDeleteDeployment() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      name,
+      namespace,
+    }: {
+      name: string;
+      namespace?: string;
+    }) => api.deleteDeployment(name, namespace),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["deployments"] });
+    },
+  });
+}
+
 export function useApplyDeploymentYaml() {
   const queryClient = useQueryClient();
   return useMutation({

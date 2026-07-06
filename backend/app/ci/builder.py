@@ -2,13 +2,13 @@ import subprocess
 import threading
 import os
 import shutil
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 
 # Global dictionary to track build statuses
 # In a real app, this would be in a database
 build_statuses: Dict[str, Dict[str, Any]] = {}
 
-def update_status(app_name: str, status: str, log_line: str = None, error: bool = False):
+def update_status(app_name: str, status: Optional[str], log_line: Optional[str] = None, error: bool = False):
     if app_name not in build_statuses:
         build_statuses[app_name] = {"status": "pending", "logs": [], "error": False}
     
@@ -26,9 +26,10 @@ def run_command(cmd: str, app_name: str, step_name: str):
         cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True
     )
     
-    for line in iter(process.stdout.readline, ''):
-        if line:
-            update_status(app_name, None, line.strip())
+    if process.stdout is not None:
+        for line in iter(process.stdout.readline, ''):
+            if line:
+                update_status(app_name, None, line.strip())
             
     process.wait()
     if process.returncode != 0:

@@ -16,7 +16,7 @@ router = APIRouter(prefix="/api/secrets", tags=["secrets"])
 
 
 @router.get("", response_model=list[SecretResponse])
-async def list_secrets(namespace: Optional[str] = Query(None)):
+def list_secrets(namespace: Optional[str] = Query(None)):
     kube = get_kube_client()
 
     if kube.is_mock:

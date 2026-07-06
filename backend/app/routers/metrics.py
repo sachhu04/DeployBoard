@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/metrics", tags=["metrics"])
 
 # Memory store for history
-history_state = []
+history_state: List[Dict[str, Any]] = []
 mock_state = {"cpu": 45.0, "memory": 60.0}
 
 def parse_cpu(cpu_str: str) -> float:
@@ -68,14 +68,16 @@ def get_mock_metrics():
     }
 
 @router.get("/cluster")
-async def get_cluster_metrics():
+def get_cluster_metrics():
     kube = get_kube_client()
     if kube.is_mock:
         return get_mock_metrics()
 
     try:
         custom_api = client.CustomObjectsApi(api_client=kube.core_v1.api_client)
-        nodes_metrics = custom_api.list_cluster_custom_object("metrics.k8s.io", "v1beta1", "nodes")
+        nodes_metrics = custom_api.list_cluster_custom_object(
+            "metrics.k8s.io", "v1beta1", "nodes", _request_timeout=2
+        )
         
         total_cpu_cores = 0.0
         total_mem_bytes = 0.0
@@ -86,7 +88,7 @@ async def get_cluster_metrics():
             total_mem_bytes += parse_mem(usage.get("memory", "0Ki"))
             
         # Get capacity
-        node_list = kube.core_v1.list_node()
+        node_list = kube.core_v1.list_node(_request_timeout=2)
         cap_cpu_cores = 0.0
         cap_mem_bytes = 0.0
         
