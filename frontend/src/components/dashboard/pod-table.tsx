@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Terminal } from "lucide-react";
+import { Terminal, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { TerminalDialog } from "./terminal-dialog";
 import {
@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatusBadge } from "./status-badge";
+import { useDeletePod } from "@/lib/hooks/use-pods";
 import type { Pod } from "@/lib/types";
 
 interface PodTableProps {
@@ -24,6 +25,7 @@ interface PodTableProps {
 
 export function PodTable({ pods, isLoading }: PodTableProps) {
   const [selectedPod, setSelectedPod] = useState<Pod | null>(null);
+  const deletePod = useDeletePod();
 
   if (isLoading) {
     return (
@@ -105,15 +107,31 @@ export function PodTable({ pods, isLoading }: PodTableProps) {
                 {pod.age}
               </TableCell>
               <TableCell className="text-right">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 text-muted-foreground hover:text-yellow-500 hover:bg-yellow-500/10"
-                  onClick={() => setSelectedPod(pod)}
-                  title="Exec Shell"
-                >
-                  <Terminal className="h-4 w-4" />
-                </Button>
+                <div className="flex items-center justify-end gap-1">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-muted-foreground hover:text-yellow-500 hover:bg-yellow-500/10"
+                    onClick={() => setSelectedPod(pod)}
+                    title="Exec Shell"
+                  >
+                    <Terminal className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-muted-foreground hover:text-red-500 hover:bg-red-500/10"
+                    onClick={() => {
+                      if (confirm(`Are you sure you want to delete pod ${pod.name}?`)) {
+                        deletePod.mutate({ name: pod.name, namespace: pod.namespace });
+                      }
+                    }}
+                    title="Delete Pod"
+                    disabled={deletePod.isPending}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
               </TableCell>
             </motion.tr>
           ))}

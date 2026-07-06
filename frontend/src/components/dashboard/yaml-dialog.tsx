@@ -112,12 +112,12 @@ export function YamlDialog({ deployment, onClose }: YamlDialogProps) {
             </div>
           )}
 
-          <div className="flex-1 relative rounded-md overflow-hidden border border-white/[0.08] min-h-[400px]">
+          <div className="h-[500px] w-full relative rounded-md overflow-hidden border border-white/[0.08]">
             {isLoading ? (
               <Skeleton className="absolute inset-0" />
             ) : (
               <Editor
-                height="100%"
+                height="500px"
                 language="yaml"
                 theme="vs-dark"
                 value={content}

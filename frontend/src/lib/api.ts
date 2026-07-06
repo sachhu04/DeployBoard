@@ -86,6 +86,11 @@ export const api = {
     const params = namespace ? `?namespace=${namespace}` : "";
     return request<Pod[]>(`/api/pods${params}`);
   },
+  deletePod: (name: string, namespace = "default") =>
+    request<ActionResponse>(
+      `/api/pods/${name}?namespace=${namespace}`,
+      { method: "DELETE" },
+    ),
 
   /* Services */
   listServices: (namespace?: string) => {

@@ -40,7 +40,7 @@ export function TerminalDialog({ pod, onClose }: TerminalDialogProps) {
         yellow: "#eab308",
         blue: "#3b82f6",
         magenta: "#d946ef",
-        yellow: "#06b6d4",
+        cyan: "#06b6d4",
         white: "#fafafa",
       },
       fontFamily: "JetBrains Mono, monospace",

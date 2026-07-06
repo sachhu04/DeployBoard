@@ -45,8 +45,7 @@ export function LogViewer() {
   // Auto-scroll
   useEffect(() => {
     if (autoScroll && scrollRef.current) {
-      const el = scrollRef.current;
-      el.scrollTop = el.scrollHeight;
+      scrollRef.current.scrollIntoView({ behavior: "instant", block: "end" });
     }
   }, [logs, autoScroll]);
 
@@ -149,7 +148,7 @@ export function LogViewer() {
         </div>
 
         <ScrollArea className="flex-1 bg-[#09090b]/90">
-          <div ref={scrollRef} className="p-4 font-mono text-xs leading-relaxed text-[#00ff00]">
+          <div className="p-4 font-mono text-xs leading-relaxed text-[#00ff00]">
           {filteredLogs.length === 0 ? (
             <div className="flex items-center justify-center py-20 text-muted-foreground text-sm">
               {selectedPod
@@ -181,6 +180,7 @@ export function LogViewer() {
               </div>
             ))
           )}
+          <div ref={scrollRef} />
         </div>
         </ScrollArea>
       </div>

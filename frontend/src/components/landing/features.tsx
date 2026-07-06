@@ -13,39 +13,39 @@ import {
 const features = [
   {
     icon: Layers,
-    title: "Deployment Management",
+    title: "One-Click Management",
     description:
-      "View all deployments across namespaces. See replica counts, status, and images at a glance.",
+      "Scale, restart, rollback, or delete deployments and pods instantly. No more typing long kubectl commands.",
   },
   {
     icon: ScrollText,
-    title: "Live Log Streaming",
+    title: "Real-Time Observability",
     description:
-      "Stream pod logs in real-time via WebSockets. Search, filter, pause, and auto-scroll through output.",
-  },
-  {
-    icon: Scale,
-    title: "Scale Workloads",
-    description:
-      "Scale deployments up or down with a click. See the equivalent kubectl command before you execute.",
-  },
-  {
-    icon: RotateCcw,
-    title: "Rollback & Restart",
-    description:
-      "Perform rolling restarts or rollbacks to previous revisions. Built-in safety with clear explanations.",
+      "Stream pod logs and view live CPU/Memory utilization graphs powered by real cluster metrics.",
   },
   {
     icon: Terminal,
-    title: "Learn kubectl",
+    title: "Interactive Web Terminal",
     description:
-      "Every action shows the exact kubectl command and explains what it does. Build real Kubernetes skills.",
+      "Pop open a native Web Socket terminal to exec directly into any pod's shell from your browser.",
   },
   {
     icon: Globe,
-    title: "Namespace Isolation",
+    title: "Live CI/CD Pipelines",
     description:
-      "Switch between namespaces seamlessly. All views filter by the selected namespace context.",
+      "Trigger live deployments from GitHub. Watch the engine clone, build, and deploy your code in real-time.",
+  },
+  {
+    icon: Scale,
+    title: "Live YAML Editing",
+    description:
+      "View, edit, and apply Kubernetes YAML configurations live using an embedded VS Code-style Monaco editor.",
+  },
+  {
+    icon: RotateCcw,
+    title: "Learn kubectl",
+    description:
+      "Every action shows the exact kubectl command and explains what it does. Build real Kubernetes skills.",
   },
 ];
 

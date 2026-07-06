@@ -1,65 +1,61 @@
-# DeployBoard
+# DeployBoard 🚀
 
-DeployBoard is a self-hosted Platform-as-a-Service (PaaS) and Kubernetes dashboard designed for rapid application deployment, real-time observability, and infrastructure management. It abstracts the complexity of Kubernetes while providing deep, live integration with the underlying cluster.
+DeployBoard is a modern, cloud-native Kubernetes management dashboard built for developers who want to manage, monitor, and deploy their workloads without living in the terminal.
 
-## Architecture
+It features a stunning "Electric Yellow" dark mode aesthetic, an embedded real-time CI/CD engine, and a suite of interactive tools to inspect and modify Kubernetes resources on the fly.
 
-DeployBoard consists of a decoupled frontend and backend, communicating over REST and WebSockets for real-time data streaming.
+## ✨ Features
 
-1.  **Frontend (Next.js / React)**
-    *   **Framework:** Next.js 16 with App Router.
-    *   **Styling:** Tailwind CSS, Framer Motion for micro-interactions, and Shadcn UI components.
-    *   **State Management:** React Query (TanStack Query) for API caching and mutation handling.
-    *   **Terminal Integration:** xterm.js for the interactive shell environment.
-2.  **Backend (FastAPI / Python)**
-    *   **Framework:** FastAPI for high-performance, asynchronous REST endpoints.
-    *   **Kubernetes Integration:** Official Python Kubernetes Client (`kubernetes-client`).
-    *   **Concurrency:** `asyncio` for WebSocket streams, integrated with ThreadPoolExecutors for blocking Kubernetes streaming APIs.
-    *   **CI/CD Engine:** A custom background daemon that interfaces with the local Docker daemon and `kind` (Kubernetes in Docker) to seamlessly build and inject images.
+- **One-Click Management:** Scale, restart, rollback, or delete deployments and pods instantly. No more typing long `kubectl` commands.
+- **Real-Time Observability:** Stream live pod logs with auto-scroll and view live CPU/Memory utilization graphs powered by real cluster metrics.
+- **Interactive Web Terminal:** Pop open a native Web Socket terminal to `exec` directly into any pod's shell from your browser.
+- **Live CI/CD Pipelines:** Trigger live deployments directly from a GitHub repository link. Watch the built-in engine clone, build, and deploy your code in real-time.
+- **Live YAML Editing:** View, edit, and apply Kubernetes YAML configurations live using an embedded VS Code-style Monaco editor.
+- **Learn kubectl:** Every action shows the exact underlying `kubectl` command and explains what it does, helping you build real Kubernetes skills.
 
-## Features
+## 🛠️ Tech Stack
 
-*   **Real-time Kubernetes Telemetry:** Live streaming of Pods, Deployments, Services, ConfigMaps, and Secrets.
-*   **Interactive Terminal:** A fully interactive, web-based bash shell into any running Pod using WebSockets (`kubectl exec`).
-*   **Live Log Streaming:** Real-time stdout/stderr streaming from containers using WebSockets (`kubectl logs -f`).
-*   **CI/CD Pipeline:** One-click deployment from any public GitHub repository. Automatically clones, locates the Dockerfile, builds the image, loads it into the cluster, and provisions the Deployment and Service network layers.
-*   **Resource Management:** Instantly scale deployments up or down, trigger rolling restarts, or rollback to previous revisions with automated error handling.
-*   **YAML Editor:** View and manually apply raw Kubernetes YAML configurations directly from the browser.
+- **Frontend:** Next.js, React, TailwindCSS, Framer Motion, Base UI, Recharts, Monaco Editor
+- **Backend:** FastAPI (Python), Kubernetes Client, WebSockets, subprocess automation
+- **Infrastructure:** Kubernetes (Kind), Docker
 
-## Prerequisites
+## 🚀 Getting Started
 
-Ensure the following dependencies are installed and running on your host machine:
+DeployBoard comes with a built-in `Makefile` to instantly spin up a local Kubernetes cluster and launch the application.
 
-*   Node.js (v18+)
-*   Python (3.12+)
-*   Docker Desktop (or equivalent Docker daemon)
-*   `kind` (Kubernetes in Docker)
-*   `kubectl`
-*   `make`
+### Prerequisites
+- Docker (must be running)
+- `kind` (Kubernetes IN Docker)
+- `kubectl`
+- Node.js & npm
+- Python 3.12+
 
-## Local Setup
+### 1. Create the Local Cluster
+Spin up the local `kind` cluster and install the necessary metrics server:
+```bash
+make cluster
+```
 
-1.  **Provision the Local Cluster**
-    Create a local Kubernetes cluster using `kind` and install the Metrics Server for resource tracking:
-    ```bash
-    make cluster
-    ```
+### 2. Deploy the Demo Workloads
+Seed the cluster with some sample applications to populate the dashboard:
+```bash
+make demo-deploy
+```
 
-2.  **Start the Development Servers**
-    Start both the FastAPI backend and the Next.js frontend concurrently:
-    ```bash
-    make dev
-    ```
+### 3. Start DeployBoard
+Launch the FastAPI backend and Next.js frontend concurrently:
+```bash
+make dev
+```
+Navigate to [http://localhost:3000](http://localhost:3000) to view the dashboard!
 
-3.  **Access the Dashboard**
-    Navigate to `http://localhost:3000` in your web browser.
+## 📸 Demo Flow
 
-## CI/CD Pipeline Details
+1. Open the **Deployments** tab to see live CPU/Memory usage.
+2. Click the `...` on a deployment and hit **View YAML** to open the live editor.
+3. Open the **Pods** tab and click the yellow Terminal icon to `exec` into a running container.
+4. Click **Deploy from GitHub**, paste a public Next.js/React repository URL, and watch the pipeline build and inject the image straight into your cluster!
 
-The custom CI/CD engine operates entirely within the host environment, bypassing the need for an external container registry during local development. When a deployment is triggered:
+## 📝 License
 
-1.  The repository is cloned to a temporary directory.
-2.  A recursive search identifies the location of the `Dockerfile` to establish the correct build context.
-3.  The Docker daemon builds the image locally.
-4.  The image is side-loaded directly into the `kind` cluster's nodes via `kind load docker-image`.
-5.  Kubernetes manifests (Deployment and Service) are generated and applied via the Kubernetes API.
+MIT License

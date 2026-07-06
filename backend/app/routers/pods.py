@@ -9,7 +9,7 @@ from fastapi import APIRouter, HTTPException, Query
 
 from app.k8s.client import get_kube_client
 from app.k8s.mock_data import mock_pods
-from app.models.schemas import PodResponse
+from app.models.schemas import PodResponse, ActionResponse
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/pods", tags=["pods"])
@@ -55,4 +55,28 @@ async def list_pods(namespace: Optional[str] = Query(None)):
         return results
     except Exception as e:
         logger.error("Failed to list pods: %s", e)
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.delete("/{name}", response_model=ActionResponse)
+async def delete_pod(name: str, namespace: str = Query("default")):
+    kube = get_kube_client()
+
+    if kube.is_mock:
+        return ActionResponse(
+            success=True,
+            message=f"Deleted pod {name} (mock)",
+            kubectl_command=f"kubectl delete pod {name} -n {namespace}",
+            explanation=f"Deletes the pod '{name}'. A new pod will be created by the ReplicaSet."
+        )
+
+    try:
+        kube.core_v1.delete_namespaced_pod(name=name, namespace=namespace)
+        return ActionResponse(
+            success=True,
+            message=f"Pod {name} has been deleted and will be recreated if managed by a deployment.",
+            kubectl_command=f"kubectl delete pod {name} -n {namespace}",
+            explanation=f"Deletes the pod '{name}'. If it is part of a deployment, Kubernetes will automatically create a replacement."
+        )
+    except Exception as e:
+        logger.error("Failed to delete pod %s: %s", name, e)
         raise HTTPException(status_code=500, detail=str(e))
